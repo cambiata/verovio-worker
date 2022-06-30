@@ -1,5 +1,6 @@
 try {
-    importScripts("node_modules/verovio/index.js");
+    // importScripts("node_modules/verovio/index.js");
+    importScripts("verovio-toolkit-wav.js");
     // importScripts('https://www.verovio.org/javascript/develop/verovio-toolkit-wasm.js');
 } catch (e) {
     console.error(e);
@@ -38,7 +39,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
 
         // postMessage on a `onRuntimeInitialized` method as soon as
         // Module is initialized
-        if(method === 'onRuntimeInitialized') {
+        if (method === 'onRuntimeInitialized') {
             moduleIsReady.promise.then(() => {
                 postMessage({
                     id,
@@ -53,7 +54,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
         // Check if verovio toolkit has passed method
         const fn = verovioToolkit[method || null];
         let result;
-        if(fn) {
+        if (fn) {
             // Call verovio toolkit method and pass arguments
             result = fn.apply(verovioToolkit, arguments || []);
         }
