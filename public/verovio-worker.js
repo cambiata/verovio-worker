@@ -1,7 +1,9 @@
 try {
     // importScripts("node_modules/verovio/index.js");
-    importScripts("verovio-toolkit-wav.js");
+    // importScripts("verovio-toolkit.3.11.0-dev-f6efbef.WAV.js");
     // importScripts('https://www.verovio.org/javascript/develop/verovio-toolkit-wasm.js');
+    importScripts('verovio-toolkit-wasm.3.11.0-dev-f6efbef.js');
+
 } catch (e) {
     console.error(e);
 }
@@ -27,7 +29,7 @@ if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScop
     const moduleIsReady = new Deferred();
 
     // Create a new toolkit instance when Module is ready
-    Module.onRuntimeInitialized = function () {
+    verovio.module.onRuntimeInitialized = function () {
         verovioToolkit = new verovio.toolkit();
         moduleIsReady.resolve();
     };
