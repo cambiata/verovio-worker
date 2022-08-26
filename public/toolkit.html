@@ -1,0 +1,146 @@
+<script src="/verovio-toolkit-proxy.js"></script>
+<!-- <script src="/node_modules/verovio/index.js"></script> -->
+<script src="/verovio-toolkit.3.11.0-dev-f6efbef.WAV.js"></script>
+<!-- <script src="/verovio-toolkit-wasm.3.11.0-dev-f6efbef.js"></script> -->
+
+<style>
+    html {
+        font-family: sans-serif;
+    }
+
+    .small {
+        width: 210px;
+        height: 297px;
+        border: 2px solid purple;
+        aspect-ratio: 210/297;
+
+    }
+
+    .container {
+        display: flex;
+    }
+
+    /* #worker {
+        display: none;
+    }
+
+    #toolkit {
+        display: none;
+    } */
+</style>
+<a href="/index.html">Testa wasm-version</a>
+
+<p>Spinner för att visualisera ui-blockering</p>
+<svg width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+    <g>
+        <animateTransform attributeName="transform" type="rotate" values="0 33 33;270 33 33" begin="0s" dur="1.4s"
+            fill="freeze" repeatCount="indefinite" />
+        <circle fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30" stroke-dasharray="187"
+            stroke-dashoffset="610">
+            <animate attributeName="stroke" values="#4285F4;#DE3E35;#F7C223;#1B9A59;#4285F4" begin="0s" dur="5.6s"
+                fill="freeze" repeatCount="indefinite" />
+            <animateTransform attributeName="transform" type="rotate" values="0 33 33;135 33 33;450 33 33" begin="0s"
+                dur="1.4s" fill="freeze" repeatCount="indefinite" />
+            <animate attributeName="stroke-dashoffset" values="187;46.75;187" begin="0s" dur="1.4s" fill="freeze"
+                repeatCount="indefinite" />
+        </circle>
+    </g>
+</svg>
+
+
+<h1>Toolkit</h1>
+<button id="btnToolkit">Render using toolkit</button>
+<div id="resultsToolkit"></div>
+<div id="toolkit">
+    <div class="container">
+        <div id="toolkit1" class="small"></div>
+        <div id="toolkit2" class="small"></div>
+        <div id="toolkit3" class="small"></div>
+        <div id="toolkit4" class="small"></div>
+        <div id="toolkit5" class="small"></div>
+        <div id="toolkit6" class="small"></div>
+        <div id="toolkit7" class="small"></div>
+    </div>
+</div>
+
+<script>
+    // console.log(verovio);
+
+    const fix = (svg) => {
+        const r = /\d+.?\dpx/;
+        return svg.replace(r, '100%').replace(r, '100%');
+    }
+
+
+    const toolkitRender = () => {
+        console.log('Run verovio in default mode');
+        document.getElementById('toolkit').style.display = 'inherit';
+        var toolkit = new verovio.toolkit();
+        (async () => {
+            // Fetch a MEI file
+
+            document.getElementById('resultsToolkit').innerHTML = '<p>Start rendering using standard js toolkit...</p>';
+            var time = Date.now();
+            const version = toolkit.getVersion();
+            console.log('Toolkit running version ' + version);
+
+
+            const response = await fetch('test.xml');
+            const data = await response.text();
+            toolkit.setOptions({
+                scale: 30,
+                justifyVertically: true,
+                spacingSystem: 24,
+                footer: 'none',
+                header: 'none',
+                breaks: 'auto',
+                pageMarginTop: 250,
+                pageMarginLeft: 200,
+                pageMarginRight: 150,
+                pageMarginBottom: 120,
+                condense: 'auto',
+                condenseNotLastSystem: 'true',
+            });
+            toolkit.loadData(data);
+            const pageCount = toolkit.getPageCount();
+            console.log('pageCount', pageCount);
+
+            console.log('toolkit svg 1');
+            const svg1 = fix(toolkit.renderToSVG(1));
+            document.getElementById('toolkit1').innerHTML = svg1;
+            const firstPageTime = Date.now() - time;
+            console.log('första sidan: ', firstPageTime);
+
+            console.log('toolkit svg 2');
+            const svg2 = fix(toolkit.renderToSVG(2));
+            document.getElementById('toolkit2').innerHTML = svg2;
+            console.log('toolkit svg 3');
+            const svg3 = fix(toolkit.renderToSVG(3));
+            document.getElementById('toolkit3').innerHTML = svg3;
+            console.log('toolkit svg 4');
+            const svg4 = fix(toolkit.renderToSVG(4));
+            document.getElementById('toolkit4').innerHTML = svg3;
+            console.log('toolkit svg 5');
+            const svg5 = fix(toolkit.renderToSVG(5));
+            document.getElementById('toolkit5').innerHTML = svg3;
+
+            console.log('renderToSVG 6');
+            const svg6 = fix(toolkit.renderToSVG(6));
+            document.getElementById('toolkit6').innerHTML = svg6;
+            console.log('renderToSVG 7');
+            const svg7 = fix(toolkit.renderToSVG(7));
+            document.getElementById('toolkit7').innerHTML = svg7;
+
+            const timemap = toolkit.renderToTimemap();
+            console.log(timemap);
+            const lastPageTime = Date.now() - time;
+            console.log('7 sidor klara: ', lastPageTime);
+            document.getElementById('resultsToolkit').innerHTML = '<p>första sidan: ' + firstPageTime + ' ms</p>' + '<p>sista sidan: ' + lastPageTime + ' ms</p>';
+
+
+        })();
+    }
+    const btnToolkit = document.getElementById('btnToolkit');
+    btnToolkit.onclick = toolkitRender;
+
+</script>

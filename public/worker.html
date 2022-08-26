@@ -1,0 +1,145 @@
+<script src="/verovio-toolkit-proxy.js"></script>
+<!-- <script src="/node_modules/verovio/index.js"></script> -->
+<!-- <script src="/verovio-toolkit.3.11.0-dev-f6efbef.WAV.js"></script> -->
+<script src="/verovio-toolkit-wasm.3.11.0-dev-f6efbef.js"></script>
+
+<style>
+    html {
+        font-family: sans-serif;
+    }
+
+    .small {
+        width: 210px;
+        height: 297px;
+        border: 2px solid purple;
+        aspect-ratio: 210/297;
+
+    }
+
+    .container {
+        display: flex;
+    }
+
+    /* #worker {
+        display: none;
+    }
+
+    #toolkit {
+        display: none;
+    } */
+</style>
+<p><a href="/index.html">Testa wasm-version (utan worker)</a></p>
+<p>Spinner för att visualisera ui-blockering</p>
+<svg width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+    <g>
+        <animateTransform attributeName="transform" type="rotate" values="0 33 33;270 33 33" begin="0s" dur="1.4s"
+            fill="freeze" repeatCount="indefinite" />
+        <circle fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30" stroke-dasharray="187"
+            stroke-dashoffset="610">
+            <animate attributeName="stroke" values="#4285F4;#DE3E35;#F7C223;#1B9A59;#4285F4" begin="0s" dur="5.6s"
+                fill="freeze" repeatCount="indefinite" />
+            <animateTransform attributeName="transform" type="rotate" values="0 33 33;135 33 33;450 33 33" begin="0s"
+                dur="1.4s" fill="freeze" repeatCount="indefinite" />
+            <animate attributeName="stroke-dashoffset" values="187;46.75;187" begin="0s" dur="1.4s" fill="freeze"
+                repeatCount="indefinite" />
+        </circle>
+    </g>
+</svg>
+
+<h1>WASM + Worker</h1>
+<button id="btnWorker">Render using worker</button>
+<div id="resultsWorker"></div>
+<div id="worker">
+    <div class="container">
+        <div id="worker1" class="small"></div>
+        <div id="worker2" class="small"></div>
+        <div id="worker3" class="small"></div>
+        <div id="worker4" class="small"></div>
+        <div id="worker5" class="small"></div>
+        <div id="worker6" class="small"></div>
+        <div id="worker7" class="small"></div>
+    </div>
+</div>
+
+<script>
+    const fix = (svg) => {
+        const r = /\d+.?\dpx/;
+        return svg.replace(r, '100%').replace(r, '100%');
+    }
+
+    const workerRender = () => {
+        const proxy = new VerovioToolkitProxy();
+        console.log('Run verovio as a worker');
+        document.getElementById('worker').style.display = 'inherit';
+        // Create a new instance of VerovioToolkitProxy
+        // Listen and wait for Module to emit onRuntimeInitialized
+        proxy.onRuntimeInitialized().then(async () => {
+            // Fetch a MEI file
+            const response = await fetch('test.xml');
+            const data = await response.text();
+            // Set inner HTML of #score to verovio response
+            // Note that method calls on VerovioToolkitProxy instances are asynchronous
+            // and will return Promises. So the must be awaited with the `await`
+            // keyword or `.then(() => {...})`
+            document.getElementById('resultsWorker').innerHTML = '<p>Start rendering using WASM in Worker thread...</p>';
+
+            var time = Date.now();
+
+            const version = await proxy.getVersion();
+            console.log('Worker running version ' + version);
+            await proxy.setOptions({
+                scale: 30,
+                justifyVertically: true,
+                spacingSystem: 24,
+                footer: 'none',
+                header: 'none',
+                breaks: 'auto',
+                pageMarginTop: 250,
+                pageMarginLeft: 200,
+                pageMarginRight: 150,
+                pageMarginBottom: 120,
+                condense: 'auto',
+                condenseNotLastSystem: 'true',
+            });
+            console.log('loadData');
+            await proxy.loadData(data);
+            const pageCount = await proxy.getPageCount();
+            console.log('pageCount', pageCount);
+
+            console.log('renderToSVG 1');
+            const svg1 = fix(await proxy.renderToSVG(1));
+            document.getElementById('worker1').innerHTML = svg1;
+            const firstPageTime = Date.now() - time;
+            console.log('första sidan: ', firstPageTime);
+
+            console.log('renderToSVG 2');
+            const svg2 = fix(await proxy.renderToSVG(2));
+            document.getElementById('worker2').innerHTML = svg2;
+            console.log('renderToSVG 3');
+            const svg3 = fix(await proxy.renderToSVG(3));
+            document.getElementById('worker3').innerHTML = svg3;
+            console.log('renderToSVG 4');
+            const svg4 = fix(await proxy.renderToSVG(4));
+            document.getElementById('worker4').innerHTML = svg4;
+            console.log('renderToSVG 5');
+            const svg5 = fix(await proxy.renderToSVG(5));
+            document.getElementById('worker5').innerHTML = svg5;
+            console.log('renderToSVG 6');
+            const svg6 = fix(await proxy.renderToSVG(6));
+            document.getElementById('worker6').innerHTML = svg6;
+            console.log('renderToSVG 7');
+            const svg7 = fix(await proxy.renderToSVG(7));
+            document.getElementById('worker7').innerHTML = svg7;
+
+            const timemap = await proxy.renderToTimemap();
+            console.log(timemap);
+            const lastPageTime = Date.now() - time;
+            console.log('7 sidor klara: ', lastPageTime);
+            document.getElementById('resultsWorker').innerHTML = '<p>första sidan: ' + firstPageTime + ' ms</p>' + '<p>sista sidan: ' + lastPageTime + ' ms</p>';
+        });
+    }
+
+    const btnWorker = document.getElementById('btnWorker');
+    btnWorker.onclick = workerRender;
+
+</script>

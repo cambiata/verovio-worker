@@ -1,12 +1,18 @@
 <script src="/verovio-toolkit-proxy.js"></script>
 <!-- <script src="/node_modules/verovio/index.js"></script> -->
-<script src="/verovio-toolkit-wav.js"></script>
+<!-- <script src="/verovio-toolkit.3.11.0-dev-f6efbef.WAV.js"></script> -->
+<script src="/verovio-toolkit-wasm.3.11.0-dev-f6efbef.js"></script>
 
 <style>
+    html {
+        font-family: sans-serif;
+    }
+
     .small {
         width: 210px;
         height: 297px;
         border: 2px solid purple;
+        aspect-ratio: 210/297;
 
     }
 
@@ -22,7 +28,9 @@
         display: none;
     } */
 </style>
-
+<p><a href="/toolkit.html">Testa standard toolkit</a></p>
+<p><a href="/worker.html">Testa wasm + worker</a></p>
+<p>Spinner för att visualisera ui-blockering</p>
 <svg width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
     <g>
         <animateTransform attributeName="transform" type="rotate" values="0 33 33;270 33 33" begin="0s" dur="1.4s"
@@ -39,86 +47,21 @@
     </g>
 </svg>
 
-<h1>Worker</h1>
-<button id="btnWorker">Render using worker</button>
-<div id="worker">
-    <p>Spinner is running</p>
+
+<h1>WASM</h1>
+<button id="btnWasm">Render using web assembler</button>
+<div id="resultsWasm"></div>
+<div id="wasm">
     <div class="container">
-        <div id="worker1" class="small"></div>
-        <div id="worker2" class="small"></div>
-        <div id="worker3" class="small"></div>
-        <div id="worker4" class="small"></div>
-        <div id="worker5" class="small"></div>
+        <div id="wasm1" class="small"></div>
+        <div id="wasm2" class="small"></div>
+        <div id="wasm3" class="small"></div>
+        <div id="wasm4" class="small"></div>
+        <div id="wasm5" class="small"></div>
+        <div id="wasm6" class="small"></div>
+        <div id="wasm7" class="small"></div>
     </div>
 </div>
-
-<script>
-    const fix = (svg) => {
-        const r = /\d+.?\dpx/;
-        return svg.replace(r, '100%').replace(r, '100%');
-    }
-
-    const workerRender = () => {
-        const proxy = new VerovioToolkitProxy();
-        console.log('Run verovio as a worker');
-        document.getElementById('worker').style.display = 'inherit';
-        // Create a new instance of VerovioToolkitProxy
-        // Listen and wait for Module to emit onRuntimeInitialized
-        proxy.onRuntimeInitialized().then(async () => {
-            // Fetch a MEI file
-            const response = await fetch('test.xml');
-            const data = await response.text();
-            // Set inner HTML of #score to verovio response
-            // Note that method calls on VerovioToolkitProxy instances are asynchronous
-            // and will return Promises. So the must be awaited with the `await`
-            // keyword or `.then(() => {...})`
-            const version = await proxy.getVersion();
-            console.log('Worker running version ' + version);
-            await proxy.setOptions({
-                scale: 30,
-                adjustPageHeight: true,
-            });
-            console.log('loadData');
-            await proxy.loadData(data);
-            console.log('renderToSVG 1');
-            const svg1 = fix(await proxy.renderToSVG(1));
-            document.getElementById('worker1').innerHTML = svg1;
-            console.log('renderToSVG 2');
-            const svg2 = fix(await proxy.renderToSVG(2));
-            document.getElementById('worker2').innerHTML = svg2;
-            console.log('renderToSVG 3');
-            const svg3 = fix(await proxy.renderToSVG(3));
-            document.getElementById('worker3').innerHTML = svg3;
-            console.log('renderToSVG 4');
-            const svg4 = fix(await proxy.renderToSVG(4));
-            document.getElementById('worker4').innerHTML = svg3;
-            console.log('renderToSVG 5');
-            const svg5 = fix(await proxy.renderToSVG(5));
-            document.getElementById('worker5').innerHTML = svg3;
-
-            const timemap = await proxy.renderToTimemap();
-            console.log(timemap);
-        });
-    }
-
-    const btnWorker = document.getElementById('btnWorker');
-    btnWorker.onclick = workerRender;
-
-</script>
-
-<h1>Toolkit</h1>
-<button id="btnToolkit">Render using toolkit</button>
-<div id="toolkit">
-    <p>Spinner is blocked</p>
-    <div class="container">
-        <div id="toolkit1" class="small"></div>
-        <div id="toolkit2" class="small"></div>
-        <div id="toolkit3" class="small"></div>
-        <div id="toolkit4" class="small"></div>
-        <div id="toolkit5" class="small"></div>
-    </div>
-</div>
-
 
 <script>
     // console.log(verovio);
@@ -126,46 +69,82 @@
     // Module.onRuntimeInitialized = function () {
     //     console.log('initialized')
     // }
+    const fix = (svg) => {
+        const r = /\d+.?\dpx/;
+        return svg.replace(r, '100%').replace(r, '100%');
+    }
 
-    const toolkitRender = () => {
+
+    const wasmRender = () => {
         console.log('Run verovio in default mode');
-        document.getElementById('toolkit').style.display = 'inherit';
-        var toolkit = new verovio.toolkit();
+        document.getElementById('wasm').style.display = 'inherit';
+        console.log(verovio);
+        // Module.onRuntimeInitialized = async () => {
+        var tkWasm = new verovio.toolkit();
         (async () => {
             // Fetch a MEI file
-            const version = toolkit.getVersion();
+            document.getElementById('resultsWasm').innerHTML = '<p>Start rendering using WASM...</p>';
+            var time = Date.now();
+            const version = tkWasm.getVersion();
             console.log('Toolkit running version ' + version);
-
 
             const response = await fetch('test.xml');
             const data = await response.text();
-            toolkit.setOptions({
+            tkWasm.setOptions({
                 scale: 30,
-                adjustPageHeight: true,
-                // breaks: 'none',
+                justifyVertically: true,
+                spacingSystem: 24,
+                footer: 'none',
+                header: 'none',
+                breaks: 'auto',
+                pageMarginTop: 250,
+                pageMarginLeft: 200,
+                pageMarginRight: 150,
+                pageMarginBottom: 120,
+                condense: 'auto',
+                condenseNotLastSystem: 'true',
             });
-            toolkit.loadData(data);
-            console.log('toolkit svg 1');
-            const svg1 = fix(toolkit.renderToSVG(1));
-            document.getElementById('toolkit1').innerHTML = svg1;
-            console.log('toolkit svg 2');
-            const svg2 = fix(toolkit.renderToSVG(2));
-            document.getElementById('toolkit2').innerHTML = svg2;
-            console.log('toolkit svg 3');
-            const svg3 = fix(toolkit.renderToSVG(3));
-            document.getElementById('toolkit3').innerHTML = svg3;
-            console.log('toolkit svg 4');
-            const svg4 = fix(toolkit.renderToSVG(4));
-            document.getElementById('toolkit4').innerHTML = svg3;
-            console.log('toolkit svg 5');
-            const svg5 = fix(toolkit.renderToSVG(5));
-            document.getElementById('toolkit5').innerHTML = svg3;
+            tkWasm.loadData(data);
+            const pageCount = tkWasm.getPageCount();
+            console.log('pageCount', pageCount);
 
-            const timemap = toolkit.renderToTimemap();
+            console.log('wasm svg 1');
+            const svg1 = fix(tkWasm.renderToSVG(1));
+            document.getElementById('wasm1').innerHTML = svg1;
+            const firstPageTime = Date.now() - time;
+            console.log('första sidan: ', firstPageTime);
+
+            console.log('wasm svg 2');
+            const svg2 = fix(tkWasm.renderToSVG(2));
+            document.getElementById('wasm2').innerHTML = svg2;
+            console.log('wasm svg 3');
+            const svg3 = fix(tkWasm.renderToSVG(3));
+            document.getElementById('wasm3').innerHTML = svg3;
+            console.log('wasm svg 4');
+            const svg4 = fix(tkWasm.renderToSVG(4));
+            document.getElementById('wasm4').innerHTML = svg3;
+            console.log('wasm svg 5');
+            const svg5 = fix(tkWasm.renderToSVG(5));
+            document.getElementById('wasm5').innerHTML = svg3;
+
+            console.log('renderToSVG 6');
+            const svg6 = fix(tkWasm.renderToSVG(6));
+            document.getElementById('wasm6').innerHTML = svg6;
+            console.log('renderToSVG 7');
+            const svg7 = fix(tkWasm.renderToSVG(7));
+            document.getElementById('wasm7').innerHTML = svg7;
+
+            const timemap = tkWasm.renderToTimemap();
             console.log(timemap);
+            const lastPageTime = Date.now() - time;
+            console.log('7 sidor klara: ', lastPageTime);
+            document.getElementById('resultsWasm').innerHTML = '<p>första sidan: ' + firstPageTime + ' ms</p>' + '<p>sista sidan: ' + lastPageTime + ' ms</p>';
+
+
         })();
+        // }
     }
-    const btnToolkit = document.getElementById('btnToolkit');
-    btnToolkit.onclick = toolkitRender;
+    const btnWasm = document.getElementById('btnWasm');
+    btnWasm.onclick = wasmRender;
 
 </script>
